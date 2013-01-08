@@ -1,0 +1,32 @@
+<?php
+
+global $_MODULE;
+$_MODULE = array();
+$_MODULE['<{mellatpaymen}prestashop>bankmellat_8c07e1cba905dda64b3d200aca532550'] = 'پرداخت آنلاين بانک ملت';
+$_MODULE['<{mellatpaymen}prestashop>bankmellat_c8f0f775a9d3e52bc521b4f5f661a548'] = 'یک ماژول مناسب جهت پرداخت آنلاین توسط بانک ملت';
+$_MODULE['<{mellatpaymen}prestashop>bankmellat_3b0bc572041917fe1e8830c516d176a3'] = 'آیا مطمئن هستید می خواهید جزئیات را حذف کنید ؟';
+$_MODULE['<{mellatpaymen}prestashop>bankmellat_e2d93539acef2afbbadf8542351fb2b4'] = 'هیچ واحد پولی مناسبی برای این ماژول تعیین نکرده اید';
+$_MODULE['<{mellatpaymen}prestashop>bankmellat_9429f5c854bd5d083634c0a2e9180173'] = 'برای استفاده از این ماژول پین کد بانک ملت شما می بایست ثبت شود';
+$_MODULE['<{mellatpaymen}prestashop>bankmellat_206414ac27dfa6c85a0c45780e098095'] = 'برای استفاده از این ماژول کد رمز گذاری دلخواه شما می بایست ثبت شود';
+$_MODULE['<{mellatpaymen}prestashop>bankmellat_de79bd3c5f012f6ab3332a2cc8790aba'] = 'شما در حال استفاده از ماژول دروازه پرداخت بانک ملت در حالت لوکال هستید';
+$_MODULE['<{mellatpaymen}prestashop>bankmellat_f4f70727dc34561dfde1a3c529b6205c'] = 'تنظیمات';
+$_MODULE['<{mellatpaymen}prestashop>bankmellat_4526eedc601a20cbff7f6dc0c7d7e5f5'] = 'پین کد بانک ملت';
+$_MODULE['<{mellatpaymen}prestashop>bankmellat_d0aed8fa0b136cc2636d2a8a8f2c3e18'] = 'کد رمزگذاری دلخواه شما';
+$_MODULE['<{mellatpaymen}prestashop>bankmellat_64b772070a37f93ea65fd4b6a75ee491'] = 'این یک کد منحصر به فرد برای امنیت بیشتر می باشد. ( لطفاً ترکیبی از نام سایت و تاریخ نصب یا اعداد بکار ببرید)';
+$_MODULE['<{mellatpaymen}prestashop>bankmellat_61cbc2d26b4157292673c772ddd6c0f7'] = 'بروز رسانی تنظیمات';
+$_MODULE['<{mellatpaymen}prestashop>bankmellat_f4d1ea475eaa85102e2b4e6d95da84bd'] = 'تائید';
+$_MODULE['<{mellatpaymen}prestashop>bankmellat_c888438d14855d7d96a2724ee9c306bd'] = 'تنظیمات بروز رسانی شد';
+$_MODULE['<{mellatpaymen}prestashop>bankmellat_9db7533da5db5b413eabc728d60c9124'] = 'کد دروازه بانک ملت ضروری است.';
+$_MODULE['<{mellatpaymen}prestashop>bankmellat_d806beae6c7f1e308075070b54c56751'] = 'کد رمزگذاری دلخواه ضروری است.';
+$_MODULE['<{mellatpaymen}prestashop>bankmellat_40b00e103fda577db8583404c1371e7f'] = 'این ماژول امکان پرداخت آنلاین از طریق دروازه پرداخت بانک ملت را در اختیار شما قرار می دهد.';
+$_MODULE['<{mellatpaymen}prestashop>bankmellat_94cfbea5c47fe880bda66a44bca9a8dd'] = 'کارتهای عضو شبکه بانکی شتاب پذیرفته می شود.';
+$_MODULE['<{mellatpaymen}prestashop>bankmellat_e475cc7149dd911c834e7f985c836d37'] = 'عدم امکان اتصال به بانک یا سرویس دهنده';
+$_MODULE['<{mellatpaymen}prestashop>bankmellat_85532dcf1b6f90fcb9c0bedd8ea5ee5d'] = 'سفارش';
+$_MODULE['<{mellatpaymen}prestashop>bankmellat_2aefc8a7a5345a7bbeefe965bde74ff4'] = 'تراکنش تائید شد.';
+$_MODULE['<{mellatpaymen}prestashop>bankmellat_fb80f548b5becb59cea46ffcd5aaaa5f'] = 'تراکنش لغـو شد.';
+$_MODULE['<{mellatpaymen}prestashop>bankmellat_df6fbdc948fffc7253a8030df4e0a3e4'] = 'پین کد بانک ملت یا آدرس آی پی نادرست است.';
+$_MODULE['<{mellatpaymen}prestashop>bankmellat_2beeb624b6fcf2e4038005d7a78e7d55'] = 'عملیات قبلا انجام شده است یا معلق مانده است.';
+$_MODULE['<{mellatpaymen}prestashop>bankmellat_5d3a8cb76a186b19f8de2b9ab45056da'] = 'شماره تراکنش ناصحیح می باشد یا منقضی شده است.';
+$_MODULE['<{mellatpaymen}prestashop>payment_1deaa03a17575b4693879e6399a4dd2e'] = 'پرداخت آنلاین توسط دروازه پرداخت بانک ملت';
+$_MODULE['<{mellatpaymen}prestashop>payment_6776abcba481367bfcfdeff3033b38ab'] = 'پرداخت با کارتهای اعتباری / نقدی بانک های عضو شتاب توسط دروازه پرداخت بانک ملت';
+$_MODULE['<{mellatpaymen}prestashop>validation_f1c0da57ae402fb157f5ee0d0b39d367'] = 'پرداخت مورد قبول واقع شد.';

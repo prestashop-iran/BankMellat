@@ -13,6 +13,7 @@ include_once(dirname(__FILE__).'/bankmellat.php');
     $ResCode = $_POST['ResCode'];
 	$saleOrderId = $_POST['SaleOrderId'];
 	$SaleReferenceId = $_POST['SaleReferenceId'];
+	$amount = (int)$_COOKIE['amount'];
     
 	echo '<h4>' .$bankmellat->l('Validate your order payment throw ').$bankmellat->displayName. '</h4>';
 
@@ -35,8 +36,8 @@ include_once(dirname(__FILE__).'/bankmellat.php');
 	
 	include('lib/nusoap.php');
 	global $cookie, $smarty;
-	$order_cart = new Cart((int)$cookie->id_cart);
-	$customer = new Customer((int)$order_cart->id_customer);
+	//$order_cart = new Cart((int)$cookie->id_cart);
+	$customer = new Customer($cart->id_customer);
 
 	$namespace='http://interfaces.core.sw.bps.com/';
 	$soapclient = new nusoap_client('https://pgws.bpm.bankmellat.ir/pgwchannel/services/pgw?wsdl', true);
@@ -88,16 +89,16 @@ include_once(dirname(__FILE__).'/bankmellat.php');
 	$result = $soapclient->call('bpSettleRequest', $params, $namespace);
 
 	// if we have a valid completed order, validate it
-	if ($result['return'] != 0 AND $result['return'] != 45){
+	if ($result['return'] != 0 OR $amount != (int)$cart->getOrderTotal(true, 3)){
 		echo $bankmellat->showErrorMessages($result['return']);
-		$bankmellat->validateOrder((int)$order_cart->id, _PS_OS_ERROR_,$order_cart->getOrderTotal(true, 3), $bankmellat->displayName,$show_info, $information ,$cookie->id_currency,false, $customer->secure_key);
+		$bankmellat->validateOrder($cart->id, _PS_OS_ERROR_,$amount, $bankmellat->displayName,$show_info, $information ,$cookie->id_currency,false, $customer->secure_key);
 		echo '<div class="error">'.$bankmellat->l('An error accured but your order registered. Please contact our support and say about errors. Keep transaction and reference codes.').'</div>';
 		include_once(dirname(__FILE__).'/../../footer.php');
 		setcookie("RefId", "", -1);
 		setcookie("amount","", -1);
 		die();
 	}
-	$validate_result = $bankmellat->validateOrder((int)$order_cart->id, _PS_OS_PAYMENT_,$order_cart->getOrderTotal(true, 3), $bankmellat->displayName,$show_info, $information,$cookie->id_currency,false, $customer->secure_key);
+	$validate_result = $bankmellat->validateOrder($cart->id, _PS_OS_PAYMENT_,$amount, $bankmellat->displayName,$show_info, $information,$cookie->id_currency,false, $customer->secure_key);
 	if($validate_result)
 		echo '<div class="validation">
 		<p class="confirmation">'.$bankmellat->l('Your order accepted. Thank you for your shoping.').'</p>

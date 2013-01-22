@@ -9,7 +9,7 @@ class BankMellat extends PaymentModule
 
 		$this->name = 'bankmellat';  
 		$this->tab = 'payments_gateways';
-		$this->version = '1.0';  
+		$this->version = '1.1';  
 		$this->author = 'Presta-Shop.IR';
 		
 		$this->currencies = true;

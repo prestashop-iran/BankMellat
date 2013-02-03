@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="UTF-8" ?>
         <module>
             <name>bankmellat</name>
-            <displayName><![CDATA[Mellat Payment]]></displayName>
-            <version><![CDATA[1.0]]></version>
-            <description><![CDATA[A free module to pay online for Mellat.]]></description>
+            <displayName><![CDATA[درگاه بانگ ملت]]></displayName>
+            <version><![CDATA[1.2]]></version>
+            <description><![CDATA[یک ماژول رایگان برای پذیرش کارت های بانکی توسط درگاه ملت]]></description>
             <author><![CDATA[Presta-Shop.IR]]></author>
             <tab><![CDATA[payments_gateways]]></tab>
-	<confirmUninstall>Are you sure, you want to delete your details?</confirmUninstall>
+	<confirmUninstall>برای حذف جزئیات مطمئن هستید؟</confirmUninstall>
             <is_configurable>1</is_configurable>
             <need_instance>1</need_instance>
 	<limited_countries></limited_countries>

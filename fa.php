@@ -27,6 +27,7 @@ $_MODULE['<{bankmellat}prestashop>payment_76f93e4e91ef18ecd048a01b6ffbcf04'] = '
 $_MODULE['<{bankmellat}prestashop>payment_9701428838263c231568c253462520ec'] = 'پرداخت توسط تمام کارت های عضو شتاب از طریق درگاه بانک ملت';
 $_MODULE['<{bankmellat}prestashop>validation_01d5dba66a2ccbc4e9c6d9be17444145'] = 'تأیید اعتبار پرداخت شما توسط ';
 $_MODULE['<{bankmellat}prestashop>validation_e685d755ecf9d8b5b172680a97c0308f'] = 'پرداخت شما نامعتبر است. دوباره امتحان کنید.';
+$_MODULE['<{bankmellat}prestashop>validation_aaeb2de36b02cd73d3241860578286b2'] = 'نمی توان به بانک متصل شد. این صفحه را بازخوانی (refresh) کنید و یا به فروشگاه بازگردید و دوباره خرید کنید.';
 $_MODULE['<{bankmellat}prestashop>validation_57d5b6ac7b2a08b1d26f60e02fa6da51'] = 'شناسه تراکنش:';
 $_MODULE['<{bankmellat}prestashop>validation_a9b612980e2fc22848a0d7828346086b'] = 'کد مرجع بانک:';
 $_MODULE['<{bankmellat}prestashop>validation_149bb2e4f6cb401cd791843ff79210d9'] = 'برای اطمینان، لطفاً این اطلاعات را نزد خود نگهداری کنید.';

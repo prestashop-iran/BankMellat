@@ -14,6 +14,14 @@ include_once(dirname(__FILE__).'/bankmellat.php');
 	$saleOrderId = $_POST['SaleOrderId'];
 	$SaleReferenceId = $_POST['SaleReferenceId'];
 	$amount = (int)$_COOKIE['amount'];
+	$purchase_currency = $bankmellat->GetCurrency();
+	if(!$purchase_currency)
+		new Currency(Currency::getIdByIsoCode('IRR'));
+	$current_currency = new Currency($cookie->id_currency);
+	if($cookie->id_currency == $purchase_currency->id)
+		$OrderAmount = number_format($cart->getOrderTotal(true, 3), 0, '', '');
+	else
+		$OrderAmount= number_format($bankmellat->convertPriceFull($cart->getOrderTotal(true, 3), $current_currency, $purchase_currency), 0, '', '');
     
 	echo '<h4>' .$bankmellat->l('Validate your order payment throw ').$bankmellat->displayName. '</h4>';
 
@@ -30,9 +38,9 @@ include_once(dirname(__FILE__).'/bankmellat.php');
 		die();
 	}
 	
-	$terminalId = Configuration::get('terminalId');
-	$userName = Configuration::get('userName');
-	$userPassword = Configuration::get('userPassword');
+	$terminalId = Configuration::get('Bank_Mellat_TerminalId');
+	$userName = Configuration::get('Bank_Mellat_UserName');
+	$userPassword = Configuration::get('Bank_Mellat_UserPassword');
 	
 	include('lib/nusoap.php');
 	global $cookie, $smarty;
@@ -44,7 +52,7 @@ include_once(dirname(__FILE__).'/bankmellat.php');
 	if (!$err = $soapclient->getError())
 	   $soapProxy = $soapclient->getProxy() ; 
 	if ( (!$soapclient) OR ($err = $soapclient->getError()) ) {
-			die(Tools::displayError('Could not connect to bank or service.'));
+			die(Tools::displayError($bankmellat->l('Could not connect to bank or service. Refresh this page or return and shopping againg.')));
 
 	}
 	else {
@@ -89,7 +97,7 @@ include_once(dirname(__FILE__).'/bankmellat.php');
 	$result = $soapclient->call('bpSettleRequest', $params, $namespace);
 
 	// if we have a valid completed order, validate it
-	if ($result['return'] != 0 OR $amount != (int)$cart->getOrderTotal(true, 3)){
+	if ($result['return'] != 0 OR $amount != $OrderAmount){
 		echo $bankmellat->showErrorMessages($result['return']);
 		$bankmellat->validateOrder($cart->id, _PS_OS_ERROR_,$amount, $bankmellat->displayName,$show_info, $information ,$cookie->id_currency,false, $customer->secure_key);
 		echo '<div class="error">'.$bankmellat->l('An error accured but your order registered. Please contact our support and say about errors. Keep transaction and reference codes.').'</div>';

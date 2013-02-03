@@ -9,7 +9,7 @@ class BankMellat extends PaymentModule
 
 		$this->name = 'bankmellat';  
 		$this->tab = 'payments_gateways';
-		$this->version = '1.1';  
+		$this->version = '1.2';  
 		$this->author = 'Presta-Shop.IR';
 		
 		$this->currencies = true;
@@ -133,19 +133,24 @@ class BankMellat extends PaymentModule
   		$soapclient = new nusoap_client('https://pgws.bpm.bankmellat.ir/pgwchannel/services/pgw?wsdl', true);
 		if (!$err = $soapclient->getError())
 		   $soapProxy = $soapclient->getProxy() ; 
-		if ( (!$soapclient) OR ($err = $soapclient->getError()) ) {
+		if ( (!$soapclient) OR $err ) {
 				$this->_postErrors[] = $this->l('Could not connect to bank or service.');
 			   	$this->displayErrors();
 
   		} else {
 			
 			//$ParsURL = 'payment.php';
-			$purchase_currency = $this->GetCurrency();			
-			$OrderDesc = Configuration::get('PS_SHOP_NAME'). $this->l(' Order');
-				if($cookie->id_currency==$purchase_currency->id)
-					$PurchaseAmount= number_format($cart->getOrderTotal(true, 3), 0, '', '');		 
-				else
-					$PurchaseAmount= number_format(Tools::convertPrice($cart->getOrderTotal(true, 3), $purchase_currency), 0, '', '');	 
+			$purchase_currency = $this->GetCurrency();
+			$purchase_currency = new Currency ($purchase_currency->id);
+			//die(print_r($purchase_currency));
+			if(!$purchase_currency)
+				new Currency(Currency::getIdByIsoCode('IRR'));
+			$current_currency = new Currency($cookie->id_currency);			
+			//$OrderDesc = Configuration::get('PS_SHOP_NAME'). $this->l(' Order');
+			if($cookie->id_currency==$purchase_currency->id)
+				$PurchaseAmount= number_format($cart->getOrderTotal(true, 3), 0, '', '');		 
+			else
+				$PurchaseAmount= number_format($this->convertPriceFull($cart->getOrderTotal(true, 3), $current_currency, $purchase_currency), 0, '', '');	 
 			
 			//date_default_timezone_set('Asia/Tehran');
 			$terminalId = Configuration::get('Bank_Mellat_TerminalId');	
@@ -173,7 +178,7 @@ class BankMellat extends PaymentModule
 						'userName' => $userName,
 						'userPassword' => $userPassword,
 						'orderId' => $orderId,
-		                'amount' => intval($PurchaseAmount),
+		                'amount' => (int)$PurchaseAmount,
 						'callBackUrl' => $CpiReturnUrl,
 						'localDate' => $localDate,
 						'localTime' => $localTime,
@@ -305,6 +310,37 @@ class BankMellat extends PaymentModule
 	public function hookPaymentReturn($params)
 	{
 		return ;
+	}
+	
+	/**
+	 *
+	 * Convert amount from a currency to an other currency automatically
+	 * @param float $amount
+	 * @param Currency $currency_from if null we used the default currency
+	 * @param Currency $currency_to if null we used the default currency
+	 */
+	public static function convertPriceFull($amount, Currency $currency_from = null, Currency $currency_to = null)
+	{
+		if ($currency_from === $currency_to)
+			return $amount;
+
+		if ($currency_from === null)
+			$currency_from = new Currency(Configuration::get('PS_CURRENCY_DEFAULT'));
+
+		if ($currency_to === null)
+			$currency_to = new Currency(Configuration::get('PS_CURRENCY_DEFAULT'));
+
+		if ($currency_from->id == Configuration::get('PS_CURRENCY_DEFAULT'))
+			$amount *= $currency_to->conversion_rate;
+		else
+		{
+            $conversion_rate = ($currency_from->conversion_rate == 0 ? 1 : $currency_from->conversion_rate);
+			// Convert amount to default currency (using the old currency rate)
+			$amount = Tools::ps_round($amount / $conversion_rate, 2);
+			// Convert to new currency
+			$amount *= $currency_to->conversion_rate;
+		}
+		return Tools::ps_round($amount, 2);
 	}
 
 }

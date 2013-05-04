@@ -2,7 +2,7 @@
         <module>
             <name>bankmellat</name>
             <displayName><![CDATA[درگاه بانگ ملت]]></displayName>
-            <version><![CDATA[1.2]]></version>
+            <version><![CDATA[1.6]]></version>
             <description><![CDATA[یک ماژول رایگان برای پذیرش کارت های بانکی توسط درگاه ملت]]></description>
             <author><![CDATA[Presta-Shop.IR]]></author>
             <tab><![CDATA[payments_gateways]]></tab>

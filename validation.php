@@ -13,23 +13,23 @@ include_once(dirname(__FILE__).'/bankmellat.php');
     $ResCode = $_POST['ResCode'];
 	$saleOrderId = $_POST['SaleOrderId'];
 	$SaleReferenceId = $_POST['SaleReferenceId'];
-	$amount = (int)$_COOKIE['amount'];
-	$purchase_currency = $bankmellat->GetCurrency();
-	if(!$purchase_currency)
-		new Currency(Currency::getIdByIsoCode('IRR'));
+	
+	$purchase_currency = new Currency(Currency::getIdByIsoCode('IRR'));
 	$current_currency = new Currency($cookie->id_currency);
+	$amount = (int)$_COOKIE['amount'];
 	if($cookie->id_currency == $purchase_currency->id)
 		$OrderAmount = number_format($cart->getOrderTotal(true, 3), 0, '', '');
 	else
-		$OrderAmount= number_format($bankmellat->convertPriceFull($cart->getOrderTotal(true, 3), $current_currency, $purchase_currency), 0, '', '');
+		$OrderAmount = number_format($bankmellat->convertPriceFull($cart->getOrderTotal(true, 3), $current_currency, $purchase_currency), 0, '', ''); 
+	
     
-	echo '<h4>' .$bankmellat->l('Validate your order payment throw ').$bankmellat->displayName. '</h4>';
+	echo '<h4>' .$bankmellat->l('تأييد پرداخت شما توسط').' '.$bankmellat->displayName. '</h4>';
 
     if ( !isset($_POST['ResCode']) OR $ResCode != "0")
     {
 		setcookie("RefId", "", -1);
 		setcookie("amount","", -1);
-		//$bankmellat->_postErrors[] = $bankmellat->l('Your Payment is invalid. Please try again. ').$errCode;
+		//$bankmellat->_postErrors[] = $bankmellat->l('پرداخت شما نامعتبر است. دوباره امتحان کنيد.').$errCode;
 		if (isset($_POST['ResCode']))
 			echo $bankmellat->showErrorMessages($ResCode);
 		else 
@@ -48,14 +48,20 @@ include_once(dirname(__FILE__).'/bankmellat.php');
 	$customer = new Customer($cart->id_customer);
 
 	$namespace='http://interfaces.core.sw.bps.com/';
-	$soapclient = new nusoap_client('https://pgws.bpm.bankmellat.ir/pgwchannel/services/pgw?wsdl', true);
-	if (!$err = $soapclient->getError())
-	   $soapProxy = $soapclient->getProxy() ; 
+	$use_new_webservise = Configuration::get('Bank_Mellat_newWebservice');
+	if ($use_new_webservise)
+		$webservice = $bankmellat->_new_webservice;
+	else
+		$webservice = $bankmellat->_webservice;
+	$soapclient = new nusoap_client($webservice);
+	
 	if ( (!$soapclient) OR ($err = $soapclient->getError()) ) {
-			die(Tools::displayError($bankmellat->l('Could not connect to bank or service. Refresh this page or return and shopping againg.')));
+		echo '<div class="error">'.$bankmellat->l('نمي توان به بانک متصل شد. اين صفحه را بازخواني (refresh) کنيد و يا به فروشگاه بازگرديد و دوباره خريد کنيد.').'<br />'.$err.'</div>';
+		die();
 
 	}
 	else {
+		$soapProxy = $soapclient->getProxy(); 
 		$verifyOrderId = date('Y').date('H').date('i').date('s');
 		// Params For Verify
 		$params = array(
@@ -81,11 +87,11 @@ include_once(dirname(__FILE__).'/bankmellat.php');
 		'SaleOrderId' => $SaleOrderId,
 		'SaleReferenceId' => $SaleReferenceId,
 	);
-	$tr = $bankmellat->l('Transaction ID:').' '.$saleOrderId;
-	$ri = $bankmellat->l('Reference Code:').' '.$SaleReferenceId;
+	$tr = $bankmellat->l('شناسه تراکنش:').' '.$saleOrderId;
+	$ri = $bankmellat->l('کد مرجع بانک:').' '.$SaleReferenceId;
 	$show_info = $tr.' <br/>'.$ri;
 	echo '<div class="confirmation">'.$show_info.'
-		<br/>' .$bankmellat->l('Please keep this information.'). '</div>';
+		<br/>' .$bankmellat->l('براي اطمينان، لطفاً اين اطلاعات را نزد خود نگهداري کنيد.'). '</div>';
 	//Params for settle
 	$params = array(
 					'terminalId' =>  $terminalId,
@@ -99,19 +105,19 @@ include_once(dirname(__FILE__).'/bankmellat.php');
 	// if we have a valid completed order, validate it
 	if ($result['return'] != 0 OR $amount != $OrderAmount){
 		echo $bankmellat->showErrorMessages($result['return']);
-		$bankmellat->validateOrder($cart->id, _PS_OS_ERROR_,$amount, $bankmellat->displayName,$show_info, $information ,$cookie->id_currency,false, $customer->secure_key);
-		echo '<div class="error">'.$bankmellat->l('An error accured but your order registered. Please contact our support and say about errors. Keep transaction and reference codes.').'</div>';
+		$bankmellat->validateOrder($cart->id, _PS_OS_ERROR_,$amount, $bankmellat->displayName,$show_info, $information ,$purchase_currency->id,false, $customer->secure_key);
+		echo '<div class="error">'.$bankmellat->l('خطايي روي داد اما سفارش شما ثبت شده است. با پشتيباني سايت تماس بگيريد و در مورد خطاهاي روي داده توضيح دهيد. شما بايد شناسه سفارش و کد مرجع را نزد خود نگه داريد.').'</div>';
 		include_once(dirname(__FILE__).'/../../footer.php');
 		setcookie("RefId", "", -1);
 		setcookie("amount","", -1);
 		die();
 	}
-	$validate_result = $bankmellat->validateOrder($cart->id, _PS_OS_PAYMENT_,$amount, $bankmellat->displayName,$show_info, $information,$cookie->id_currency,false, $customer->secure_key);
+	$validate_result = $bankmellat->validateOrder($cart->id, _PS_OS_PAYMENT_,$cart->getOrderTotal(true, 3), $bankmellat->displayName,$show_info, $information,$cookie->id_currency,false, $customer->secure_key);
 	if($validate_result)
 		echo '<div class="validation">
-		<p class="confirmation">'.$bankmellat->l('Your order accepted. Thank you for your shoping.').'</p>
-		<p><a href="/history.php">'.$bankmellat->l('Return to orders history').'</a></p></div>';
-	else echo '<div class="error">'.$bankmellat->l('An error accured but your order registered. Please contact our support and say about errors. Keep transaction and reference codes.').'</div>';
+		<p class="confirmation">'.$bankmellat->l('سفارش شما دريافت شد. از خريد شما سپاس گذاريم.').'</p>
+		<p><a href="http://'.$_SERVER['HTTP_HOST'].__PS_BASE_URI__.'history.php">'.$bankmellat->l('بازگشت به تاريخچه سفارش ها').'</a></p></div>';
+	else echo '<div class="error">'.$bankmellat->l('خطايي روي داد اما سفارش شما ثبت شده است. با پشتيباني سايت تماس بگيريد و در مورد خطاهاي روي داده توضيح دهيد. شما بايد شناسه سفارش و کد مرجع را نزد خود نگه داريد.').'</div>';
 	setcookie("RefId", "", -1);
     setcookie("amount","", -1);
 

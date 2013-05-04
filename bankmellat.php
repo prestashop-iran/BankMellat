@@ -1,19 +1,20 @@
 <?php 
 class BankMellat extends PaymentModule
 {  
-
 	private $_html = '';
+	
+	public $_webservice = 'https://pgws.bpm.bankmellat.ir/pgwchannel/services/pgw?wsdl';
+	public $_new_webservice = 'https://pgwsf.bpm.bankmellat.ir/pgwchannel/services/pgw?wsdl';
 	private $_postErrors = array();
-
+	
 	public function __construct(){  
-
 		$this->name = 'bankmellat';  
 		$this->tab = 'payments_gateways';
-		$this->version = '1.2';  
+		$this->version = '1.6';  
 		$this->author = 'Presta-Shop.IR';
 		
 		$this->currencies = true;
-  		$this->currencies_mode = 'radio';
+  		$this->currencies_mode = 'checkbox';
 		
 		parent::__construct();  		
 		
@@ -21,14 +22,11 @@ class BankMellat extends PaymentModule
 		$this->displayName = $this->l('Mellat Payment');  
 		$this->description = $this->l('A free module to pay online for Mellat.');  
 		$this->confirmUninstall = $this->l('Are you sure, you want to delete your details?');
-
 		if (!sizeof(Currency::checkPaymentCurrencies($this->id)))
 			$this->warning = $this->l('No currency has been set for this module');
-
 		$config = Configuration::getMultiple(array('Bank_Mellat_TerminalId', ''));			
 		if (!isset($config['Bank_Mellat_TerminalId']))
 			$this->warning = $this->l('Your Mellat TerminalId must be configured in order to use this module');
-
 		$config = Configuration::getMultiple(array('Bank_Mellat_UserName', ''));			
 		if (!isset($config['Bank_Mellat_UserName']))
 			$this->warning = $this->l('Your Mellat username must be configured in order to use this module');
@@ -36,16 +34,15 @@ class BankMellat extends PaymentModule
 			$config = Configuration::getMultiple(array('Bank_Mellat_UserPassword', ''));			
 		if (!isset($config['Bank_Mellat_UserPassword']))
 			$this->warning = $this->l('Your Mellat password must be configured in order to use this module');
-
 			
 		if ($_SERVER['SERVER_NAME'] == 'localhost')
 			$this->warning = $this->l('Your are in localhost, Mellat Payment can\'t validate order');
-
-
 	}  
 	public function install(){
 		if (!parent::install()
 	    	OR !Configuration::updateValue('Bank_Mellat_TerminalId', '')
+			
+			OR !Configuration::updateValue('Bank_Mellat_newWebservice', 0)
 	    	OR !Configuration::updateValue('Bank_Mellat_UserName', '')
 			OR !Configuration::updateValue('Bank_Mellat_UserPassword', '')
 	      	OR !$this->registerHook('payment')
@@ -76,11 +73,37 @@ class BankMellat extends PaymentModule
 				<div class="margin-form"><input type="text" size="30" name="userName" value="'.Configuration::get('Bank_Mellat_UserName').'" /></div>
 				<label>'.$this->l('userPassword').'</label>
 				<div class="margin-form"><input type="password" size="30" name="userPassword" value="'.Configuration::get('Bank_Mellat_UserPassword').'" /></div>
+				
+				<label>'.$this->l('New Webservice').'</label>
+				<div class="margin-form"><input type="checkbox" name="newWebservice" '.(Configuration::get('Bank_Mellat_newWebservice') ? "checked" : "").' /> <span>'.$this->l('yes').'</span></div>
 				<center><input type="submit" name="submitMellat" value="'.$this->l('Update Settings').'" class="button" /></center>			
 			</fieldset>
 		</form>';
 	}
-
+	
+	public function checkWebservices()
+	{
+		$this->_html .= '<form action="'.$_SERVER['REQUEST_URI'].'" method="post">
+		<fieldset>		
+		<legend><img src="../img/admin/cog.gif" alt="" class="middle" />'.$this->l('بررسی وب سرویس').'</legend><p>';
+		if (Tools::getValue('submitCheck'))
+		{
+			$connection = @fsockopen('pgws.bpm.bankmellat.ir', '443');
+			if (is_resource($connection))
+				$this->_html .= 'وب سرویس قدیمی: بله</p><p>';
+			else $this->_html .= 'وب سرویس قدیمی: خیر</p><p>';
+			$connection = @fsockopen('pgwsf.bpm.bankmellat.ir', '443');
+			if (is_resource($connection))
+				$this->_html .= 'وب سرویس جدید: بله</p>';
+			else $this->_html .= 'وب سرویس جدید: خیر</p>';
+		}
+		
+		$this->_html .= '
+		
+		<center><input type="submit" name="submitCheck" value="'.$this->l('بررسی امکان اتصال به وب سرویس').'" class="button" />
+		<p style="text-align:center;">این عمل ممکن است مدتی طول بکشد. شکیبا باشید.</p></center>
+		</fieldset></form>';
+	}
 	public function displayConf()
 	{
 	
@@ -92,7 +115,6 @@ class BankMellat extends PaymentModule
 		foreach ($this->_postErrors AS $err)
 		$this->_html .= '<div class="alert error">'. $err .'</div>';
 	}
-
        	public function getContent()
 	{
 		$this->_html = '<h2>'.$this->l('Mellat Payment').'</h2>';
@@ -104,7 +126,7 @@ class BankMellat extends PaymentModule
 			if (empty($_POST['userName']))
 				$this->_postErrors[] = $this->l('Your username is required.');
 			
-				if (empty($_POST['userPassword']))
+			if (empty($_POST['userPassword']))
 				$this->_postErrors[] = $this->l('Your password is required.');
 			if (!sizeof($this->_postErrors))
 			{
@@ -114,37 +136,41 @@ class BankMellat extends PaymentModule
 				Configuration::updateValue('Bank_Mellat_UserName', $_POST['userName']);
 			
 				Configuration::updateValue('Bank_Mellat_UserPassword', $_POST['userPassword']);
+				
+				Configuration::updateValue('Bank_Mellat_newWebservice', $_POST['newWebservice']);
 				$this->displayConf();
 			}
 			else
 				$this->displayErrors();
 		}
-
 		$this->displayFormSettings();
+		$this->checkWebservices();
 		return $this->_html;
 	}
-
 	public function execPayment($cart)
 	{
         include('lib/nusoap.php');
 		global $cookie, $smarty;
-
+		
+		
+		$use_new_webservise = Configuration::get('Bank_Mellat_newWebservice');
+  		if ($use_new_webservise)
+			$webservice = $this->_new_webservice;
+		else
+			$webservice = $this->_webservice;
+		$soapclient = new nusoap_client($webservice);
 		$namespace='http://interfaces.core.sw.bps.com/';
-  		$soapclient = new nusoap_client('https://pgws.bpm.bankmellat.ir/pgwchannel/services/pgw?wsdl', true);
+		
 		if (!$err = $soapclient->getError())
-		   $soapProxy = $soapclient->getProxy() ; 
+			$soapProxy = $soapclient->getProxy() ;
 		if ( (!$soapclient) OR $err ) {
 				$this->_postErrors[] = $this->l('Could not connect to bank or service.');
 			   	$this->displayErrors();
-
   		} else {
 			
 			//$ParsURL = 'payment.php';
-			$purchase_currency = $this->GetCurrency();
+			$purchase_currency = new Currency(Currency::getIdByIsoCode('IRR'));
 			$purchase_currency = new Currency ($purchase_currency->id);
-			//die(print_r($purchase_currency));
-			if(!$purchase_currency)
-				new Currency(Currency::getIdByIsoCode('IRR'));
 			$current_currency = new Currency($cookie->id_currency);			
 			//$OrderDesc = Configuration::get('PS_SHOP_NAME'). $this->l(' Order');
 			if($cookie->id_currency==$purchase_currency->id)
@@ -166,10 +192,8 @@ class BankMellat extends PaymentModule
 			$localTime = $lt;
 			$additionalData = "Cart Number: ".$orderId." Customer ID: ".$cart->id_customer;
 			$payerID = 0;
-
 			
 			
-
 			
 			$CpiReturnUrl = (Configuration::get('PS_SSL_ENABLED') ?'https://' :'http://').$_SERVER['HTTP_HOST'].__PS_BASE_URI__.'modules/bankmellat/validation.php';
 			
@@ -188,29 +212,33 @@ class BankMellat extends PaymentModule
 			
 			$res = $soapclient->call('bpPayRequest', $params, $namespace);
 			
-			if ($soapclient->fault) {
+			if ($soapclient->fault OR $err = $soapclient->getError()) {
 				echo '<h2>Fault</h2><pre>';
 				print_r($res);
+				print_r($err);
 				echo '</pre>';
 				die();
 			} 
 			else {
 			// Check for errors
 			
-				foreach ($res as $arr){
+				
+				/* foreach ($res as $arr){
 					$resultStr = $arr;
-				}
-			
-				$err = $soapclient->getError();
+				} */
+
+				/* $err = $soapclient->getError();
 				if ($err) {
 					// Display the error
 					echo '<h2>Error</h2><pre>' . $err . '</pre>';
 					die();
 				} 
-				else {
+				else */ {
 					// Display the result
-
-					$ress = explode (',',$resultStr);
+					if (is_array($res))
+						$ress = explode (',',$res['return']);
+					else
+						$ress = explode (',',$res);
 					$ResCode = $ress[0];
 					$RefId     = $ress[1];
 					if ($ResCode == "0") {
@@ -222,7 +250,6 @@ class BankMellat extends PaymentModule
 							</script>';
 								echo "<form name=\"frmmellatpaymen\" action=\"https://pgw.bpm.bankmellat.ir/pgwchannel/startpay.mellat\" method=\"post\">
 							<input type=\"hidden\" id=\"RefId\" name=\"RefId\" value=\"$RefId\" />
-
 							</form>";
 					} 
 					else {
@@ -300,7 +327,6 @@ class BankMellat extends PaymentModule
 	}
 	
 	public function hookPayment($params){
-
 		if (!$this->active)
 			return ;
 		
@@ -323,13 +349,10 @@ class BankMellat extends PaymentModule
 	{
 		if ($currency_from === $currency_to)
 			return $amount;
-
 		if ($currency_from === null)
 			$currency_from = new Currency(Configuration::get('PS_CURRENCY_DEFAULT'));
-
 		if ($currency_to === null)
 			$currency_to = new Currency(Configuration::get('PS_CURRENCY_DEFAULT'));
-
 		if ($currency_from->id == Configuration::get('PS_CURRENCY_DEFAULT'))
 			$amount *= $currency_to->conversion_rate;
 		else
@@ -342,5 +365,4 @@ class BankMellat extends PaymentModule
 		}
 		return Tools::ps_round($amount, 2);
 	}
-
 }
